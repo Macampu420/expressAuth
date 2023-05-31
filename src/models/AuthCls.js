@@ -79,8 +79,24 @@ class Auth {
         return bcrypt.compareSync(clientPass, hashedPass);
     }
     
-    signIn(req, res) {
-        res.send('signin');
+    async signIn(req, res) {
+        let { username, password, idRol } = req.body;
+
+        let checkUser = await this.checkUser(username);
+        
+        if (!checkUser) return res.status(404).json({mensaje: "Usuario no encontrado"});
+
+        let queryUser = `SELECT * FROM usuarios WHERE username = '${username}' AND idRol = '${idRol}'`;
+        let resultUser = await pool.query(queryUser);
+
+        if(!resultUser.length) return res.status(401).json({mensaje: "Contraseña y/o rol incorrectos, por favot verificar."});
+
+        if(!this.validatePassword(password, resultUser[0].password)) return res.status(401).json({mensaje: "Contraseña y/o rol incorrectos, por favot verificar."});
+
+        console.log(resultUser);
+
+        res.json({token: ''});
+
     }
 
 }
